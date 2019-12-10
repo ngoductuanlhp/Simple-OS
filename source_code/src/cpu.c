@@ -46,7 +46,38 @@ static int write(
 	return write_mem(proc->regs[destination] + offset, proc, data);
 } 
 
-int run(struct pcb_t * proc) {
+// int run(struct pcb_t * proc) {
+// 	/* Check if Program Counter point to the proper instruction */
+// 	if (proc->pc >= proc->code->size) {
+// 		return 1;
+// 	}
+
+// 	/* Get the current instruction */
+// 	struct inst_t ins = proc->code->text[proc->pc];
+// 	proc->pc++;
+// 	int stat = 1;
+// 	switch (ins.opcode) {
+// 	case CALC:
+// 		stat = calc(proc);
+// 		break;
+// 	case ALLOC:
+// 		stat = alloc(proc, ins.arg_0, ins.arg_1);
+// 		break;
+// 	case FREE:
+// 		stat = free_data(proc, ins.arg_0);
+// 		break;
+// 	case READ:
+// 		stat = read(proc, ins.arg_0, ins.arg_1, ins.arg_2);
+// 		break;
+// 	case WRITE:
+// 		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
+// 		break;
+// 	default:
+// 		stat = 1;
+// 	}
+// 	return stat;
+// }
+int run_new(struct pcb_t * proc, int id) {
 	/* Check if Program Counter point to the proper instruction */
 	if (proc->pc >= proc->code->size) {
 		return 1;
@@ -56,27 +87,44 @@ int run(struct pcb_t * proc) {
 	struct inst_t ins = proc->code->text[proc->pc];
 	proc->pc++;
 	int stat = 1;
+	LOG_INFO(
+		printf("\tCPU %d - PID: %d - PC: %d: ", id, proc->pid, proc->pc - 1);
+	);
 	switch (ins.opcode) {
 	case CALC:
+		LOG_INFO(
+			printf("CALC\n");
+		);
 		stat = calc(proc);
 		break;
 	case ALLOC:
+		LOG_INFO(
+			printf("ALLOC\n");
+		);
 		stat = alloc(proc, ins.arg_0, ins.arg_1);
 		break;
 	case FREE:
+		LOG_INFO(
+			printf("FREE\n");
+		);
 		stat = free_data(proc, ins.arg_0);
 		break;
 	case READ:
+		LOG_INFO(
+			printf("READ\n");
+		);
 		stat = read(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 		break;
 	case WRITE:
+		LOG_INFO(
+			printf("WRITE\n");
+		);
 		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 		break;
 	default:
 		stat = 1;
 	}
 	return stat;
-
 }
 
 

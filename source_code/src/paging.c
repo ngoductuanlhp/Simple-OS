@@ -13,7 +13,8 @@ int main(int argc, char ** argv) {
 	struct pcb_t * proc = load(argv[1]);
 	unsigned int i;
 	for (i = 0; i < proc->code->size; i++) {
-		run(proc);
+		// run(proc);
+		run_new(proc, 0);
 	}
 	LOG_INFO(
 		printf("____________FINAL____________\n");

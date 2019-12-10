@@ -49,4 +49,14 @@ void add_proc(struct pcb_t * proc) {
 	pthread_mutex_unlock(&queue_lock);	
 }
 
+void print_status_queue() {
+	printf("\tQueue status: ");
+	pthread_mutex_lock(&queue_lock);
+	for(int i = 0; i < ready_queue.size; i++) {
+		printf("PID: %d, Prior: %d\t", ready_queue.proc[i]->pid, ready_queue.proc[i]->priority);
+	}
+	pthread_mutex_unlock(&queue_lock);
+	printf("\n");
+}
+
 

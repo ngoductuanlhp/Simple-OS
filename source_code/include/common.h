@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#define LOG_INFO(x) x
+
 #define ADDRESS_SIZE	20
 #define OFFSET_LEN	10
 #define SEGMENT_LEN	5

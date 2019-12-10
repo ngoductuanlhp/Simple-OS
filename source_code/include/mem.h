@@ -4,7 +4,7 @@
 #include "common.h"
 
 #define RAM_SIZE	(1 << ADDRESS_SIZE)
-#define LOG_INFO(x) //x
+
 
 
 /* Init related parameters, must be called before being used */
