@@ -116,7 +116,7 @@ addr_t alloc_mem(uint32_t size, struct pcb_t * proc) {
 	// 	(size / PAGE_SIZE) + 1; // Number of pages we will use
 	uint32_t num_pages = (size % PAGE_SIZE == 0) ? size / PAGE_SIZE :
 		(size / PAGE_SIZE) + 1; // Number of pages we will use
-	int mem_avail = 0; // We could allocate new memory region or not?
+	// int mem_avail = 0; // We could allocate new memory region or not?
 
 	/* First we must check if the amount of free memory in
 	 * virtual address space and physical address space is
@@ -135,27 +135,37 @@ addr_t alloc_mem(uint32_t size, struct pcb_t * proc) {
 		}
 	}
 
+	int mem_avail = 1;
+
 	// Not enough free pages in physical memory
-	if(avail_pages < num_pages)
-		return 0;
+	if(avail_pages < num_pages) {
+		mem_avail = 0;
+		// pthread_mutex_unlock(&mem_lock);
+		// return 0;
+	}
+		
 	
 	// proc->bp manages the current size of the heap segment, if proc->bp + size_of_new_alloc_mem > RAM
 	// => Exceed virtual memory
-	if(proc->bp + num_pages * PAGE_SIZE > RAM_SIZE)
-		return 0;
+	if(proc->bp + num_pages * PAGE_SIZE > RAM_SIZE) {
+		mem_avail = 0;
+		// pthread_mutex_unlock(&mem_lock);
+		// return 0;
+	}
+		
 
-	mem_avail = 1;
+	// mem_avail = 1;
 	
 	if (mem_avail) {
 		/* We could allocate new memory region to the process */
 		ret_mem = proc->bp;
 		proc->bp += num_pages * PAGE_SIZE;
 		/* Update status of physical pages which will be allocated
-		 * to [proc] in _mem_stat. Tasks to do:
-		 * 	- Update [proc], [index], and [next] field
-		 * 	- Add entries to segment table page tables of [proc]
-		 * 	  to ensure accesses to allocated memory slot is
-		 * 	  valid. */
+			* to [proc] in _mem_stat. Tasks to do:
+			* 	- Update [proc], [index], and [next] field
+			* 	- Add entries to segment table page tables of [proc]
+			* 	  to ensure accesses to allocated memory slot is
+			* 	  valid. */
 		int allocated_idx = 0;
 		int last_allocated_idx = -1;
 		for(int i = 0; i < NUM_PAGES; i++) {
@@ -193,14 +203,12 @@ addr_t alloc_mem(uint32_t size, struct pcb_t * proc) {
 				allocated_idx++;
 			}
 		}
-
+		LOG_INFO(
+			printf("\t_______________________Allocation_______________________\n");
+			printf("\tNo. of new pages: %d\n", num_pages);
+			dump_new(proc);
+		);
 	}
-	
-	LOG_INFO(
-		printf("\t__________ALLOCATE__________\n");
-		printf("\tNo. of pages: 	%d\n", num_pages);
-		dump_new(proc);
-	);
 	pthread_mutex_unlock(&mem_lock);
 	// Virtual address of the first byte of the new allocated region
 	return ret_mem;
@@ -218,10 +226,13 @@ int free_mem(addr_t address, struct pcb_t * proc) {
 	pthread_mutex_lock(&mem_lock);
 	addr_t v_address = address;
 	addr_t p_address = 0;
-
+	
 	// Translate v_address to p_address
-	if(!translate(v_address, &p_address, proc))
+	if(!translate(v_address, &p_address, proc)) {
+		pthread_mutex_unlock(&mem_lock);
 		return 1;
+	}
+	
 
 	// Clear physical pages
 	int num_free_pages = 0;
@@ -277,8 +288,8 @@ int free_mem(addr_t address, struct pcb_t * proc) {
 	}
 	
 	LOG_INFO(
-		printf("\t_________DEALLOCATE_________\n");
-		printf("\tNo. of free pages: 	%d\n", num_free_pages);
+		printf("\t______________________Dellocation_______________________\n");
+		printf("\tNo. of freed pages: %d\n", num_free_pages);
 		dump_new(proc);
 	);
 	pthread_mutex_unlock(&mem_lock);
@@ -290,6 +301,11 @@ int read_mem(addr_t address, struct pcb_t * proc, BYTE * data) {
 	if (translate(address, &physical_addr, proc)) {
 		pthread_mutex_lock(&ram_lock);
 		*data = _ram[physical_addr];
+		LOG_INFO(
+			printf("\t__________________________Read__________________________\n");
+			printf("\tRead %02x at %05x\n", *data, physical_addr);
+			printf("\t________________________________________________________\n\n");
+		);
 		pthread_mutex_unlock(&ram_lock);
 		return 0;
 	}else{
@@ -299,17 +315,15 @@ int read_mem(addr_t address, struct pcb_t * proc, BYTE * data) {
 
 int write_mem(addr_t address, struct pcb_t * proc, BYTE data) {
 	addr_t physical_addr;
-	LOG_INFO(
-		printf("V_address: %05x\n", address);
-	);
 	if (translate(address, &physical_addr, proc)) {
 		// Add mutexlock
 		pthread_mutex_lock(&ram_lock);
 		_ram[physical_addr] = data;
 		
 		LOG_INFO(
-			printf("\t_________WRITE DATA__________\n");
+			printf("\t_________________________Write__________________________\n");
 			printf("\tWrite %02x at %05x\n", data, physical_addr);
+			printf("\t________________________________________________________\n\n");
 		);
 		pthread_mutex_unlock(&ram_lock);
 		return 0;
@@ -342,7 +356,7 @@ void dump(void) {
 			}
 		}
 	}
-	printf("\t____________________________\n");
+	printf("\t________________________________________________________\n\n");
 }
 
 void dump_new(struct pcb_t * proc) {
@@ -350,14 +364,13 @@ void dump_new(struct pcb_t * proc) {
 	for(int i = 0; i < proc->seg_table->size; i++) {
 		struct page_table_t* page_table = proc->seg_table->table[i].pages;
 		if(page_table != NULL) {
-			printf("\t\tSegment %d: ", i);
+			printf("\t\tV_segment %d: ", proc->seg_table->table[i].v_index);
 			for(int j = 0; j < page_table->size; j++) {
 				printf("(%d: %d)   ", page_table->table[j].v_index, page_table->table[j].p_index);
 			}
 		}
 		printf("\n");
 	}
-	printf("\n");
 	printf("\tPhysical memory:\n");
 	int i;
 	for (i = 0; i < NUM_PAGES; i++) {
@@ -370,19 +383,17 @@ void dump_new(struct pcb_t * proc) {
 				_mem_stat[i].index,
 				_mem_stat[i].next
 			);
-			int j;
-			for (	j = i << OFFSET_LEN;
+			pthread_mutex_lock(&ram_lock);
+			for (int j = i << OFFSET_LEN;
 				j < ((i+1) << OFFSET_LEN) - 1;
 				j++) {
 				
 				if (_ram[j] != 0) {
 					printf("\t\t\t%05x: %02x\n", j, _ram[j]);
-				}
-					
+				}	
 			}
+			pthread_mutex_unlock(&ram_lock);
 		}
 	}
-	printf("\t____________________________\n");
+	printf("\t________________________________________________________\n\n");
 }
-
-

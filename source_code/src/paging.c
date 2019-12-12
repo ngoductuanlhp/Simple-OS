@@ -17,7 +17,7 @@ int main(int argc, char ** argv) {
 		run_new(proc, 0);
 	}
 	LOG_INFO(
-		printf("____________FINAL____________\n");
+		printf("FINAL\n");
 	)
 	dump();
 	return 0;

@@ -9,6 +9,9 @@ static int calc(struct pcb_t * proc) {
 }
 
 static int alloc(struct pcb_t * proc, uint32_t size, uint32_t reg_index) {
+	if(proc->regs[reg_index] != 0) {
+		free_mem(proc->regs[reg_index], proc);
+	}
 	addr_t addr = alloc_mem(size, proc);
 	if (addr == 0) {
 		return 1;
@@ -19,7 +22,10 @@ static int alloc(struct pcb_t * proc, uint32_t size, uint32_t reg_index) {
 }
 
 static int free_data(struct pcb_t * proc, uint32_t reg_index) {
-	return free_mem(proc->regs[reg_index], proc);
+	int check = free_mem(proc->regs[reg_index], proc);
+	if(check == 0)
+		proc->regs[reg_index] = 0;
+	return check;
 }
 
 static int read(
@@ -45,6 +51,12 @@ static int write(
 					// [destination] + [offset]
 	return write_mem(proc->regs[destination] + offset, proc, data);
 } 
+
+void clean_mem(struct pcb_t * proc) {
+	for(uint32_t i = 0; i < 10; i ++) {
+		free_mem(proc->regs[i], proc);
+	}
+}
 
 // int run(struct pcb_t * proc) {
 // 	/* Check if Program Counter point to the proper instruction */
@@ -88,36 +100,36 @@ int run_new(struct pcb_t * proc, int id) {
 	proc->pc++;
 	int stat = 1;
 	LOG_INFO(
-		printf("\tCPU %d - PID: %d - PC: %d: ", id, proc->pid, proc->pc - 1);
+		printf("\tCPU %d - PID %d - PC: %d: ", id, proc->pid, proc->pc);
 	);
 	switch (ins.opcode) {
 	case CALC:
 		LOG_INFO(
-			printf("CALC\n");
+			printf("Calc\n");
 		);
 		stat = calc(proc);
 		break;
 	case ALLOC:
 		LOG_INFO(
-			printf("ALLOC\n");
+			printf("Alloc\n");
 		);
 		stat = alloc(proc, ins.arg_0, ins.arg_1);
 		break;
 	case FREE:
 		LOG_INFO(
-			printf("FREE\n");
+			printf("Free\n");
 		);
 		stat = free_data(proc, ins.arg_0);
 		break;
 	case READ:
 		LOG_INFO(
-			printf("READ\n");
+			printf("Read\n");
 		);
 		stat = read(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 		break;
 	case WRITE:
 		LOG_INFO(
-			printf("WRITE\n");
+			printf("Write\n");
 		);
 		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 		break;

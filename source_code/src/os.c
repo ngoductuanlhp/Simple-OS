@@ -36,14 +36,21 @@ static void * cpu_routine(void * args) {
 		if (proc == NULL) {
 			/* No process is running, the we load new process from
 		 	* ready queue */
-		 	print_status_queue(); // Print curretn processes in ready_queue
+		 	LOG_INFO(
+				 print_status_queue(); // Print curretn processes in ready_queue
+			);
 			proc = get_proc();
 		}else if (proc->pc == proc->code->size) {
 			/* The porcess has finish it job */
 			printf("\tCPU %d: Processed %2d has finished\n",
 				id ,proc->pid);
+			CLEAN_AFTER_STOP(
+				clean_mem(proc);
+			);
 			free(proc);
-			print_status_queue(); // Print curretn processes in ready_queue
+			LOG_INFO(
+				 print_status_queue(); // Print current processes in ready_queue
+			);
 			proc = get_proc(); 
 			time_left = 0;
 		}else if (time_left == 0) {
@@ -51,7 +58,9 @@ static void * cpu_routine(void * args) {
 			printf("\tCPU %d: Put process %2d to run queue\n",
 				id, proc->pid);
 			put_proc(proc); // Put current process to run_queue
-			print_status_queue(); // Print curretn processes in ready_queue
+			LOG_INFO(
+				 print_status_queue(); // Print curretn processes in ready_queue
+			);
 			proc = get_proc(); // Get new process from ready_queue
 		}
 		

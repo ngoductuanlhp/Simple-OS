@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #define LOG_INFO(x) x
+#define CLEAN_AFTER_STOP(x) //x
 
 #define ADDRESS_SIZE	20
 #define OFFSET_LEN	10

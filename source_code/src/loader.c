@@ -41,6 +41,11 @@ struct pcb_t * load(const char * path) {
 	proc->bp = PAGE_SIZE;
 	proc->pc = 0;
 
+	/* Init regs to 0*/
+	for(int i = 0; i < 10; i++) {
+		proc->regs[i] = 0;
+	}
+
 	/* Read process code from file */
 	FILE * file;
 	if ((file = fopen(path, "r")) == NULL) {
