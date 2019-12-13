@@ -21,8 +21,8 @@ struct pcb_t * dequeue(struct queue_t * q) {
 	 * */
 	if(empty(q)) return NULL;
 	//int currentPriority = q->proc[0]->priority;
-	int idx = q->size - 1;
-	for(int i = q->size - 2; i >= 0; i--) {
+	int idx = 0;
+	for(int i = 1; i < q->size; i++) {
 		if(q->proc[i]->priority > q->proc[idx]->priority) {
 			idx = i;
 		}
@@ -37,7 +37,7 @@ struct pcb_t * dequeue(struct queue_t * q) {
 }
 
 /*get the PCB at the tail of the queue*/
-struct pcb_t * dequeueAtTail(struct queue_t * q) {
+struct pcb_t * dequeueAtTail(struct queue_t *q) {
 	if(empty(q)) return NULL;
 	struct pcb_t * proc = q->proc[q->size - 1];
 	q->size--;

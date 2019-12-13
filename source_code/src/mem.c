@@ -206,7 +206,7 @@ addr_t alloc_mem(uint32_t size, struct pcb_t * proc) {
 		LOG_INFO(
 			printf("\t_______________________Allocation_______________________\n");
 			printf("\tNo. of new pages: %d\n", num_pages);
-			dump_new(proc);
+			dump_new(proc, ret_mem);
 		);
 	}
 	pthread_mutex_unlock(&mem_lock);
@@ -263,23 +263,24 @@ int free_mem(addr_t address, struct pcb_t * proc) {
 					break;
 				}
 			}
-		}
-
-		// Remove the page table
-		if(page_table->size == 0) {
-			for(int j = 0; j < proc->seg_table->size; j++) {
-				if(proc->seg_table->table[j].v_index == v_segment) {
-					// Swap this entry with the last entry and delete
-					int last_entry = proc->seg_table->size - 1;
-					proc->seg_table->table[j] = proc->seg_table->table[last_entry];
-					proc->seg_table->table[last_entry].v_index = 0;
-					free(proc->seg_table->table[last_entry].pages);
-					// Assign NULL to page*
-					proc->seg_table->table[last_entry].pages = NULL;
-					proc->seg_table->size--;
+			// Remove the page table
+			if(page_table->size == 0) {
+				for(int j = 0; j < proc->seg_table->size; j++) {
+					if(proc->seg_table->table[j].v_index == v_segment) {
+						// Swap this entry with the last entry and delete
+						int last_entry = proc->seg_table->size - 1;
+						proc->seg_table->table[j] = proc->seg_table->table[last_entry];
+						proc->seg_table->table[last_entry].v_index = 0;
+						free(proc->seg_table->table[last_entry].pages);
+						// Assign NULL to page*
+						proc->seg_table->table[last_entry].pages = NULL;
+						proc->seg_table->size--;
+					}
 				}
 			}
 		}
+
+		
 	}
 
 	// Update break point
@@ -290,7 +291,7 @@ int free_mem(addr_t address, struct pcb_t * proc) {
 	LOG_INFO(
 		printf("\t______________________Dellocation_______________________\n");
 		printf("\tNo. of freed pages: %d\n", num_free_pages);
-		dump_new(proc);
+		dump_new(proc, address);
 	);
 	pthread_mutex_unlock(&mem_lock);
 	return 0;
@@ -322,7 +323,7 @@ int write_mem(addr_t address, struct pcb_t * proc, BYTE data) {
 		
 		LOG_INFO(
 			printf("\t_________________________Write__________________________\n");
-			printf("\tWrite %02x at %05x\n", data, physical_addr);
+			printf("\tWrite 0x%02x at 0x%05x\n", data, physical_addr);
 			printf("\t________________________________________________________\n\n");
 		);
 		pthread_mutex_unlock(&ram_lock);
@@ -359,7 +360,8 @@ void dump(void) {
 	printf("\t________________________________________________________\n\n");
 }
 
-void dump_new(struct pcb_t * proc) {
+void dump_new(struct pcb_t * proc, addr_t ret_mem) {
+	printf("\tStart address: 0x%05x: \n", ret_mem);
 	printf("\tVirtual memory:\n");
 	for(int i = 0; i < proc->seg_table->size; i++) {
 		struct page_table_t* page_table = proc->seg_table->table[i].pages;
@@ -374,7 +376,8 @@ void dump_new(struct pcb_t * proc) {
 	printf("\tPhysical memory:\n");
 	int i;
 	for (i = 0; i < NUM_PAGES; i++) {
-		if (_mem_stat[i].proc == proc->pid) {
+		if(_mem_stat[i].proc != 0) {
+		// if (_mem_stat[i].proc == proc->pid) {
 			printf("\t\t%03d: ", i);
 			printf("%05x-%05x - PID: %02d (idx %03d, nxt: %03d)\n",
 				i << OFFSET_LEN,

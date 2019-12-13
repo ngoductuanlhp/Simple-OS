@@ -58,37 +58,38 @@ void clean_mem(struct pcb_t * proc) {
 	}
 }
 
-// int run(struct pcb_t * proc) {
-// 	/* Check if Program Counter point to the proper instruction */
-// 	if (proc->pc >= proc->code->size) {
-// 		return 1;
-// 	}
+int run(struct pcb_t * proc) {
+	/* Check if Program Counter point to the proper instruction */
+	if (proc->pc >= proc->code->size) {
+		return 1;
+	}
 
-// 	/* Get the current instruction */
-// 	struct inst_t ins = proc->code->text[proc->pc];
-// 	proc->pc++;
-// 	int stat = 1;
-// 	switch (ins.opcode) {
-// 	case CALC:
-// 		stat = calc(proc);
-// 		break;
-// 	case ALLOC:
-// 		stat = alloc(proc, ins.arg_0, ins.arg_1);
-// 		break;
-// 	case FREE:
-// 		stat = free_data(proc, ins.arg_0);
-// 		break;
-// 	case READ:
-// 		stat = read(proc, ins.arg_0, ins.arg_1, ins.arg_2);
-// 		break;
-// 	case WRITE:
-// 		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
-// 		break;
-// 	default:
-// 		stat = 1;
-// 	}
-// 	return stat;
-// }
+	/* Get the current instruction */
+	struct inst_t ins = proc->code->text[proc->pc];
+	proc->pc++;
+	int stat = 1;
+	switch (ins.opcode) {
+	case CALC:
+		stat = calc(proc);
+		break;
+	case ALLOC:
+		stat = alloc(proc, ins.arg_0, ins.arg_1);
+		break;
+	case FREE:
+		stat = free_data(proc, ins.arg_0);
+		break;
+	case READ:
+		stat = read(proc, ins.arg_0, ins.arg_1, ins.arg_2);
+		break;
+	case WRITE:
+		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
+		break;
+	default:
+		stat = 1;
+	}
+	return stat;
+}
+
 int run_new(struct pcb_t * proc, int id) {
 	/* Check if Program Counter point to the proper instruction */
 	if (proc->pc >= proc->code->size) {
@@ -100,37 +101,37 @@ int run_new(struct pcb_t * proc, int id) {
 	proc->pc++;
 	int stat = 1;
 	LOG_INFO(
-		printf("\tCPU %d - PID %d - PC: %d: ", id, proc->pid, proc->pc);
+		printf("\tCPU %d - PID %d - PC: %d - Type: %d\n", id, proc->pid, proc->pc - 1, ins.opcode);
 	);
 	switch (ins.opcode) {
 	case CALC:
-		LOG_INFO(
-			printf("Calc\n");
-		);
+		// LOG_INFO(
+		// 	printf("Calc\n");
+		// );
 		stat = calc(proc);
 		break;
 	case ALLOC:
-		LOG_INFO(
-			printf("Alloc\n");
-		);
+		// LOG_INFO(
+		// 	printf("Alloc\n");
+		// );
 		stat = alloc(proc, ins.arg_0, ins.arg_1);
 		break;
 	case FREE:
-		LOG_INFO(
-			printf("Free\n");
-		);
+		// LOG_INFO(
+		// 	printf("Free\n");
+		// );
 		stat = free_data(proc, ins.arg_0);
 		break;
 	case READ:
-		LOG_INFO(
-			printf("Read\n");
-		);
+		// LOG_INFO(
+		// 	printf("Read\n");
+		// );
 		stat = read(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 		break;
 	case WRITE:
-		LOG_INFO(
-			printf("Write\n");
-		);
+		// LOG_INFO(
+		// 	printf("Write\n");
+		// );
 		stat = write(proc, ins.arg_0, ins.arg_1, ins.arg_2);
 		break;
 	default:
